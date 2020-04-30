@@ -12,9 +12,10 @@ const ItemCtrl = (function(){
     // Create Data Structure (similar to State)
     const state = {
         items : [
-            {id : 0, name : 'Steak', calories : 350},
-            {id : 1, name : 'BP Coffee', calories : 110},
-            {id : 2, name : 'Omelete', calories : 500}
+            // Dummy data
+            // {id : 0, name : 'Steak', calories : 350},
+            // {id : 1, name : 'BP Coffee', calories : 110},
+            // {id : 2, name : 'Omelete', calories : 500}
         ],
         currentItem : null,
         totalCalories : 0
@@ -42,6 +43,18 @@ const ItemCtrl = (function(){
 
             return newItem ;
         },
+        getTotalCalories : () => {
+            let total = 0
+
+            state.items.forEach(function(x){
+                total += x.calories
+            })
+
+            state.totalCalories = total ;
+
+            return state.totalCalories ;
+        },
+
         logState : () => {return state } 
          
     };
@@ -52,10 +65,11 @@ const ItemCtrl = (function(){
 const UICtrl = (function(){
     // Use UI selectors for more efficient code
     const UISelectors = {
-        itemList : "item-list",
+        itemList : "#item-list",
         addBtn : '.add-btn',
         itemNameInput : '#item-name',
         itemCalInput : '#item-calories',
+        totalCalories : '.total-calories'
     }
 
 
@@ -73,10 +87,42 @@ const UICtrl = (function(){
               </li>`
             })
 
-            document.getElementById(UISelectors.itemList).innerHTML = html ;
+            document.querySelector(UISelectors.itemList).innerHTML = html ;
+        },
+
+        addListItem : (item) =>{
+            // Show the list
+            document.querySelector(UISelectors.itemList).style.display = 'block' ;
+            // Create li element to insert to DOM
+            const li = document.createElement('li');
+            // Add class
+            li.className = 'collection-item';
+            // Add dynamic element id
+            li.id = `item-${item.id}`;
+            // Add HTML
+            li.innerHTML = `<strong>${item.name}: </strong> <em>${item.calories} Calories</em>
+            <a href="#" class="secondary-content">
+              <i class="fa fa-pencil"></i>
+            </a>`
+
+            // Insert to DOM
+            document.querySelector(UISelectors.itemList).insertAdjacentElement('beforeend', li);
+        },
+
+        hideList : () => {
+            document.querySelector(UISelectors.itemList).style.display = 'none' ;
         },
 
         getUISelectors : () => {return UISelectors},
+
+        clearInput : () => {
+            document.querySelector(UISelectors.itemCalInput).value = '' ;
+            document.querySelector(UISelectors.itemNameInput).value = '' ;
+        },
+
+        showTotalCalories : (total) => {
+            document.querySelector(UISelectors.totalCalories).innerHTML = total ;
+        },
 
         getItemInput : () => { 
             return {
@@ -111,10 +157,22 @@ const App = (function(ItemCtrl, UICtrl){
         // Get from data from UI controller
         const input = UICtrl.getItemInput() ;
 
-
         if(input.name !== '' && input.calories !== ''){
-            //Proceed and add item to ItemCtrl
-            const addItem = ItemCtrl.addItem(input.name, input.calories);
+
+            // Add item to ItemCtrl data structure
+            const newItem = ItemCtrl.addItem(input.name, input.calories);
+
+            // Add item to UI list
+            UICtrl.addListItem(newItem) ;
+
+            // Get total calories
+            const totalCalories = ItemCtrl.getTotalCalories();
+            
+            // Add total calories to UI
+            UICtrl.showTotalCalories(totalCalories) ;
+
+            // Clear UI input fields
+            UICtrl.clearInput();
         }
 
         e.preventDefault();
@@ -127,10 +185,22 @@ const App = (function(ItemCtrl, UICtrl){
         init : () => {
             // Get the items from state
             const items = ItemCtrl.getItems();
-            
-            // Pass items to UICtrl to display
-            UICtrl.populateItemList(items);
 
+            // Check if any items
+            if(items.length === 0){
+                // Hide the list
+                UICtrl.hideList();
+            } else {
+                // Pass items to UICtrl to display
+                UICtrl.populateItemList(items);
+            }
+
+            // Get total calories
+            const totalCalories = ItemCtrl.getTotalCalories();
+            
+            // Add total calories to UI
+            UICtrl.showTotalCalories(totalCalories) ;
+            
             // Load Event Listeners 
             loadEventListeners(); 
         }
