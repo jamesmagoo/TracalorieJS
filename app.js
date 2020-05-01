@@ -43,6 +43,22 @@ const ItemCtrl = (function(){
 
             return newItem ;
         },
+        getItemById : (id) =>{
+        
+            let found = null;
+
+            state.items.forEach(function(item){
+
+                if(item.id === id){
+                    found = item ;
+                }
+            })
+            return found ;
+
+        },
+        setCurrentItem : (x)=>{
+            state.currentItem = x ;
+        },
         getTotalCalories : () => {
             let total = 0
 
@@ -67,6 +83,9 @@ const UICtrl = (function(){
     const UISelectors = {
         itemList : "#item-list",
         addBtn : '.add-btn',
+        deleteBtn : '.delete-btn',
+        backBtn : '.back-btn',
+        updateBtn : '.update-btn',
         itemNameInput : '#item-name',
         itemCalInput : '#item-calories',
         totalCalories : '.total-calories'
@@ -102,7 +121,7 @@ const UICtrl = (function(){
             // Add HTML
             li.innerHTML = `<strong>${item.name}: </strong> <em>${item.calories} Calories</em>
             <a href="#" class="secondary-content">
-              <i class="fa fa-pencil"></i>
+              <i class="edit-item fa fa-pencil"></i>
             </a>`
 
             // Insert to DOM
@@ -129,6 +148,12 @@ const UICtrl = (function(){
                 name : document.querySelector(UISelectors.itemNameInput).value ,
                 calories : document.querySelector(UISelectors.itemCalInput).value,
             }
+        },
+
+        initEditState : () => {
+            document.querySelector(UISelectors.updateBtn).style.display = 'none';
+            document.querySelector(UISelectors.deleteBtn).style.display = 'none';
+            document.querySelector(UISelectors.backBtn).style.display = 'none';
         }
 
         
@@ -148,10 +173,12 @@ const App = (function(ItemCtrl, UICtrl){
         // Add Item Event
         document.querySelector(UISelector.addBtn).addEventListener('click', itemAddSubmit) ;
 
+        // Edit Item Event 
+        document.querySelector(UISelector.itemList).addEventListener('click', itemEditSubmit) ;
+
     }
 
     // addItemSubmit Method
-
     const itemAddSubmit = function(e){
 
         // Get from data from UI controller
@@ -179,10 +206,37 @@ const App = (function(ItemCtrl, UICtrl){
 
     }
 
+    const itemEditSubmit = function(e){
+
+        if (e.target.classList.contains('edit-item')) {
+            // Get List Item ID
+            const listId = e.target.parentNode.parentNode.id ;
+
+            // Break String into Array using split() method to get id number
+            const listIdArr = listId.split('-');
+
+            // Get index 1 of array which will always be the id number
+            const id = parseInt(listIdArr[1]);
+
+            // Pass to ItemCtrl to get the item
+            const itemToEdit = ItemCtrl.getItemById(id) ;
+
+            // Set item as current item
+            ItemCtrl.setCurrentItem(itemToEdit);
+
+            //Add Item to form
+
+        }
+
+    }
+
     // Public Methods
     // Initialise App
     return {
         init : () => {
+            // Initial Edit state
+            UICtrl.initEditState();
+
             // Get the items from state
             const items = ItemCtrl.getItems();
 
